@@ -1,7 +1,3 @@
-## 📚 과목 정보
-
-단국대학교 오픈소스 SW 기초 (2026년 1학기)
-
 # 🗓️ 시간표 마법사 — CSP 기반 최적 시간표 자동 생성기
 
 ![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=flat&logo=react)
