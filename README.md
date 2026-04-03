@@ -1,3 +1,7 @@
+## 📚 과목 정보
+
+단국대학교 오픈소스 SW 기초 (2026년 1학기)
+
 # 🗓️ 시간표 마법사 — CSP 기반 최적 시간표 자동 생성기
 
 ![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=flat&logo=react)
@@ -5,9 +9,6 @@
 ![Flask](https://img.shields.io/badge/API-Flask-000000?style=flat&logo=flask)
 ![License](https://img.shields.io/badge/License-MIT-534AB7?style=flat)
 
-> 단국대학교 수강신청, 조건만 말하면 최적 시간표를 자동으로 생성해드립니다.
-
----
 
 ## 📌 프로젝트 소개
 
@@ -149,9 +150,7 @@ dku-timetable/
 
 ---
 
-## 📚 과목 정보
 
-단국대학교 오픈소스 SW 기초 (2026년 1학기)
 
 ---
 
