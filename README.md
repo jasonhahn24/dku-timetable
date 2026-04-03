@@ -87,8 +87,8 @@ tui-calendar 시각화
 | 이름 | 역할 | 담당 기술 |
 |---|---|---|
 | 한상윤 | CSP 알고리즘, Flask 백엔드, 크롤러 | Python, Flask |
-| 양진혁 | 챗봇 UI, Gemini API 연동, 파싱 모듈 | Python, JavaScript |
-| 박현준 | UI/UX 설계, HTML/CSS, tui-calendar | HTML, CSS, JavaScript |
+| 박현준 | 챗봇 UI, Gemini API 연동, 파싱 모듈 | Python, JavaScript |
+| 양진혁 | UI/UX 설계, HTML/CSS, tui-calendar | HTML, CSS, JavaScript |
 | 안병규 | Chart.js 시각화, 저장 기능, 반응형 | JavaScript, Chart.js |
 
 ---
