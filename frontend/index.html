@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP 기반 최적 시간표 자동 생성 챗봇</title>
+    
+
+    
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="chatbot-sidebar">
+            <div class="chat-header">⏱️ 시간표 생성 챗봇 AI</div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="bot-message">
+                    안녕하세요! 원하는 시간표 조건을 말씀해주세요.<br>
+                    (예: "금공강 해줘", "아침 수업은 싫어", "운영체제 무조건 넣어줘") 
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="조건을 입력하세요..."> 
+                <button id="sendBtn">전송</button> 
+            </div>
+        </aside>
+
+        <main class="timetable-section">
+            <div class="timetable-header">
+                <h2>나의 최적 시간표 스케줄러</h2> 
+                <div class="condition-tags" id="conditionTags">
+                    <span class="tag">금공강</span> 
+                    <span class="tag">아침 제외</span> 
+                </div>
+            </div>
+            
+            <div id="calendar"></div> 
+        </main>
+    </div>
+
+   <script src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
+    <script src="https://uicdn.toast.com/tui.time-picker/v1.3.0/tui-time-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui.date-picker/v1.2.0/tui-date-picker.min.js"></script>
+    
+    <script src="https://uicdn.toast.com/tui-calendar/v1.13.0/tui-calendar.min.js"></script>
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-calendar/v1.13.0/tui-calendar.min.css">
+    
+    <script src="./js/timetable.js"></script>
+</body>
+</html>
