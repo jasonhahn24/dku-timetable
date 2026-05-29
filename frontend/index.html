@@ -3,49 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSP 기반 최적 시간표 자동 생성 챗봇</title>
-    
-
-    
+    <title>시간표 마법사 - CSP 기반 최적 시간표 자동 생성기</title>
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-calendar/v1.13.0/tui-calendar.min.css">
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-
     <div class="app-container">
+        <!-- 좌측 챗봇 사이드바 -->
         <aside class="chatbot-sidebar">
-            <div class="chat-header">⏱️ 시간표 생성 챗봇 AI</div>
+            <div class="chat-header">
+                <span class="chat-header-title">🪄 시간표 마법사</span>
+                <span class="chat-header-sub">AI 챗봇</span>
+            </div>
+
             <div class="chat-messages" id="chatMessages">
                 <div class="bot-message">
-                    안녕하세요! 원하는 시간표 조건을 말씀해주세요.<br>
-                    (예: "금공강 해줘", "아침 수업은 싫어", "운영체제 무조건 넣어줘") 
+                    안녕하세요! 원하는 시간표 조건을 자유롭게 말씀해 주세요.<br><br>
+                    예시:<br>
+                    💬 "금공강이고 아침은 싫어"<br>
+                    💬 "운영체제 무조건 넣어줘"<br>
+                    💬 "소프트웨어학과 전공이야"
                 </div>
             </div>
-            <div class="chat-input-area">
-                <input type="text" id="userInput" placeholder="조건을 입력하세요..."> 
-                <button id="sendBtn">전송</button> 
+
+            <!-- 조건 태그 -->
+            <div class="condition-tags-wrap">
+                <div class="condition-tags" id="conditionTags"></div>
             </div>
+
+            <!-- 입력창 -->
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="조건을 입력하세요..." />
+                <button id="sendBtn">전송</button>
+            </div>
+
+            <!-- 시간표 생성 버튼 -->
+            <button id="generateBtn" class="generate-btn">🗓️ 시간표 생성하기</button>
         </aside>
 
+        <!-- 우측 시간표 영역 -->
         <main class="timetable-section">
             <div class="timetable-header">
-                <h2>나의 최적 시간표 스케줄러</h2> 
-                <div class="condition-tags" id="conditionTags">
-                    <span class="tag">금공강</span> 
-                    <span class="tag">아침 제외</span> 
+                <div class="candidate-nav" id="candidateNav" style="display:none;">
+                    <button id="prevBtn">←</button>
+                    <span id="candidateInfo">후보 1 / 1</span>
+                    <button id="nextBtn">→</button>
+                    <span class="score-badge" id="scoreBadge">0점</span>
+                    <button id="saveBtn" class="save-btn">저장</button>
+                </div>
+                <div id="loadingMsg" style="display:none;" class="loading-msg">
+                    <span id="loadingText">시간표 생성 중...</span>
                 </div>
             </div>
-            
-            <div id="calendar"></div> 
+
+            <!-- tui-calendar -->
+            <div id="calendar"></div>
+
+            <!-- 충돌 리포트 -->
+            <div id="conflictReport" class="conflict-report" style="display:none;">
+                <div class="conflict-title">⚠️ 조건 충돌이 발생했어요</div>
+                <div id="conflictList"></div>
+            </div>
+
+            <!-- 저장된 시간표 목록 -->
+            <div id="savedList" class="saved-list" style="display:none;">
+                <div class="saved-title">저장된 시간표</div>
+                <div id="savedItems"></div>
+            </div>
         </main>
     </div>
 
-   <script src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
+    <!-- tui-calendar 의존성 -->
+    <script src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
     <script src="https://uicdn.toast.com/tui.time-picker/v1.3.0/tui-time-picker.min.js"></script>
     <script src="https://uicdn.toast.com/tui.date-picker/v1.2.0/tui-date-picker.min.js"></script>
-    
     <script src="https://uicdn.toast.com/tui-calendar/v1.13.0/tui-calendar.min.js"></script>
-    <link rel="stylesheet" href="https://uicdn.toast.com/tui-calendar/v1.13.0/tui-calendar.min.css">
-    
+
     <script src="./js/timetable.js"></script>
+    <script src="./js/chatbot.js"></script>
 </body>
 </html>
