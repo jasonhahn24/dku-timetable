@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 """
 Flask API 서버 - CSP 시간표 자동 생성기
 POST /api/parse    - 자연어 -> 제약 조건 변환 (Gemini API)
@@ -212,4 +209,3 @@ def build_tags(constraints: dict) -> list:
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
->>>>>>> feature/flask-api
