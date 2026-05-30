@@ -6,6 +6,7 @@ const API_BASE = 'http://localhost:5000';
 let constraints = {
     required_courses: [],
     no_class_days: [],
+    excluded_courses: [],
     no_class_periods: [],
     preferred_professors: [],
     excluded_professors: [],
@@ -201,6 +202,7 @@ async function handleGenerate() {
         }
 
         solutions = data.solutions;
+        console.log('solutions 개수:', solutions.length); 
         currentIdx = 0;
         showSolution(0);
         addBotMessage(`✅ ${data.total_found}개의 후보 시간표를 찾았어요! (${data.elapsed_ms}ms)\n좌우 화살표로 비교해보세요.`);
@@ -224,6 +226,15 @@ function showSolution(idx) {
         window.updateTimetable(sol.timetable);
     }
 
+     // 차트 업데이트 
+    if (window.updateCharts) {
+        window.updateCharts(solutions, idx);
+    }
+
+    document.getElementById('candidateNav').style.display = 'flex';
+    document.getElementById('candidateInfo').textContent = `\ud6c4\ubcf4 ${idx + 1} / ${solutions.length}`;
+    document.getElementById('scoreBadge').textContent = `${sol.score}\uc810`;
+
     // 후보 정보 업데이트
     document.getElementById('candidateNav').style.display = 'flex';
     document.getElementById('candidateInfo').textContent = `후보 ${idx + 1} / ${solutions.length}`;
@@ -244,7 +255,7 @@ function applyConstraints(newConstraints, tags) {
 
     // 배열 필드는 누적
     const arrayFields = ['required_courses', 'no_class_days', 'no_class_periods',
-                         'preferred_professors', 'excluded_professors', 'lecture_types'];
+                         'preferred_professors', 'excluded_professors', 'lecture_types', 'excluded_courses'];
 
     arrayFields.forEach(field => {
         if (newConstraints[field] && newConstraints[field].length > 0) {
@@ -310,6 +321,10 @@ function buildTagsFromConstraints() {
 
     constraints.excluded_professors.forEach(p => {
         tags.push({ label: `${p} 기피`, key: 'excluded_professors', value: p });
+    });
+
+        constraints.excluded_courses?.forEach(c => {
+        tags.push({ label: `${c} 제외`, key: 'excluded_courses', value: c });
     });
 
     if (constraints.no_online) {
@@ -498,4 +513,16 @@ function buildSummaryMessage(c) {
 
     if (parts.length === 0) return '조건이 추가됐어요. 더 추가하거나 시간표를 생성해보세요!';
     return `조건을 확인했어요:\n${parts.join('\n')}\n\n더 추가하거나 [시간표 생성하기]를 눌러주세요!`;
+}
+
+function toggleChart() {
+    const content = document.getElementById('chartContent');
+    const btn = event.target;
+    if (content.style.display === 'none') {
+        content.style.display = 'flex';
+        btn.textContent = '접기';
+    } else {
+        content.style.display = 'none';
+        btn.textContent = '펼치기';
+    }
 }

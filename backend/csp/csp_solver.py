@@ -294,7 +294,7 @@ def find_conflicts(constraints, filtered_courses):
 
 
 def generate_timetables(constraints, json_path="dku_courses_csp.json",
-                         max_results=5, timeout=3.0):
+                         max_results=100, timeout=3.0):
     start = time.time()
     all_courses = load_courses(json_path)
     filtered = pre_filter(all_courses, constraints)
@@ -341,6 +341,10 @@ def generate_timetables(constraints, json_path="dku_courses_csp.json",
     all_courses_raw = load_courses(json_path)
     for c in all_courses_raw:
         if c["id"] in seen_all:
+            continue
+        # 제외 과목 체크
+        excluded = constraints.get("excluded_courses", [])
+        if any(ex in c["name"] for ex in excluded):
             continue
         t = c.get("type", "")
         dept = c.get("dept", "")
@@ -433,6 +437,7 @@ def generate_timetables(constraints, json_path="dku_courses_csp.json",
         print(f"  {n} | {g[0].get('type','')} | {g[0].get('dept','')[:20]}")
 
     # 전공 과목 먼저 추가
+    excluded_courses = constraints.get("excluded_courses", [])
     for name, group in all_by_name.items():
         if any(req in name for req in required_names):
             continue

@@ -165,9 +165,17 @@ def parse():
             result['target_credit'] = credit
             result['max_credit'] = credit + 1
 
+    # 과목 제외 패턴 매칭
+    exclude_match = re.search(r'(.+?)\s*(?:빼줘|제외해줘|빼|제외)', text)
+    if exclude_match:
+        course_name = exclude_match.group(1).strip()
+        exclude_words = ['수업', '과목', '강의', '전공', '교양', '원격', '온라인', '대면', '아침', '야간']
+        if course_name not in exclude_words and len(course_name) > 1:
+            result['excluded_courses'] = result.get('excluded_courses', []) + [course_name]
+
     # 2차: 모호한 표현은 Gemini API 호출
     gemini_result = gemini_parse(text)
-    print(f"Gemini 파싱 결과: {gemini_result}")  # 추가
+    print(f"Gemini 파싱 결과: {gemini_result}")  
 
     # 병합 (Gemini 결과로 업데이트)
     for k, v in gemini_result.items():
@@ -183,6 +191,7 @@ def parse():
 
 
 
+
 @app.route("/api/generate", methods=["POST"])
 def generate():
     """
@@ -195,6 +204,7 @@ def generate():
     # min_credit 자동 설정
     constraints.setdefault("target_credit", 18)
     constraints.setdefault("max_credit", 19)
+    print(f"excluded_courses: {constraints.get('excluded_courses', [])}")
     constraints["min_credit"] = constraints["target_credit"] - 3
     print(f"min_credit: {constraints['min_credit']}, target: {constraints['target_credit']}")
 
@@ -214,7 +224,7 @@ def generate():
         result = generate_timetables(
             constraints=constraints,
             json_path=COURSES_JSON,
-            max_results=5,
+            max_results=100,
             timeout=3.0
         )
         return jsonify(result)
