@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function addThirtyMin(timeStr) {
+        if (!timeStr) return timeStr;
+        const [h, m] = timeStr.split(':').map(Number);
+        const total = h * 60 + m + 30;
+        const nh = String(Math.floor(total / 60)).padStart(2, '0');
+        const nm = String(total % 60).padStart(2, '0');
+        return `${nh}:${nm}`;
+    }
+
     // 요일 문자열 → 날짜 변환
     function getParsedDate(dayOfWeekStr, timeStr) {
         const baseDate = calendar.getDate().getTime();
@@ -74,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: `${course.name}\n${course.professor}\n${slot.room}`,
                     category: 'time',
                     start: getParsedDate(slot.day_kor, slot.start),
-                    end: getParsedDate(slot.day_kor, slot.end),
+                    end: getParsedDate(slot.day_kor, addThirtyMin(slot.end)),
                     bgColor: color,
                     color: '#ffffff',
                     borderColor: color

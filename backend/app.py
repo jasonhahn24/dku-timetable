@@ -11,6 +11,8 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
+load_dotenv()
 
 # CSP 엔진 경로 추가
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'csp'))
@@ -40,6 +42,18 @@ KEYWORD_MAP = {
     "\uc6d0\uaca9 \uc81c\uc678": {"no_online": True},
     "\ub300\uba74\ub9cc": {"no_online": True},
     "\uc628\ub77c\uc778 \uc81c\uc678": {"no_online": True},
+    "\uc18c\ud504\ud2b8\uc6e8\uc5b4\ud559\uacfc": {"user_dept": "\uc18c\ud504\ud2b8\uc6e8\uc5b4\ud559\uacfc"},
+    "\ucef4\ud4e8\ud130\uacf5\ud559\uacfc": {"user_dept": "\ucef4\ud4e8\ud130\uacf5\ud559\uacfc"},
+    "\uae30\uacc4\uacf5\ud559\uacfc": {"user_dept": "\uae30\uacc4\uacf5\ud559\uacfc"},
+    "\uc804\uae30\uc804\uc790\uacf5\ud559\uacfc": {"user_dept": "\uc804\uae30\uc804\uc790\uacf5\ud559\uacfc"},
+    "\uc628\ub77c\uc778 \uc704\uc8fc": {"no_online": False, "lecture_types": ["\uc6d0\uaca9\uc218\uc5c5"]},
+    "\uc628\ub77c\uc778\ub9cc": {"no_online": False, "lecture_types": ["\uc6d0\uaca9\uc218\uc5c5"]},
+    "\uc6d0\uaca9 \uc704\uc8fc": {"no_online": False, "lecture_types": ["\uc6d0\uaca9\uc218\uc5c5"]},
+    "\ub300\uba74 \uc704\uc8fc": {"lecture_types": ["\ub300\uba74\uc218\uc5c5"]},
+    "\ub300\uba74\ub9cc": {"lecture_types": ["\ub300\uba74\uc218\uc5c5"]},
+    "\uad50\uc591 \ub123\uc5b4\uc918": {"include_liberal": True},
+    "\uad50\uc591\ub3c4 \ub123\uc5b4": {"include_liberal": True},
+    "\uad50\uc591 \ud3ec\ud568": {"include_liberal": True}
 }
 
 
@@ -76,6 +90,13 @@ def gemini_parse(text: str) -> dict:
 - lecture_types: 수업유형 리스트 (예: ["대면수업"])
 - required_types: 이수구분별 최소 개수 (예: {{"전공필수": 1, "교양필수": 1}})
 
+예시 출력:
+- "송인식 교수 수업으로 해줘" -> {{"preferred_professors": ["송인식"]}}
+- "송인식 교수 빼줘" -> {{"excluded_professors": ["송인식"]}}
+- "3학년 수업 위주로" -> {{"grade": "3"}}
+- "온라인 강의 위주로" -> {{"lecture_types": ["원격수업"]}}
+- "대면 수업만" -> {{"lecture_types": ["대면수업"]}}
+- "전공필수 2개 넣어줘" -> {{"required_types": {{"전공필수": 2}}}}
 사용자 입력: "{text}"
 """
 
@@ -87,7 +108,9 @@ def gemini_parse(text: str) -> dict:
             timeout=10
         )
         data = response.json()
+        print(f"Gemini 전체 응답: {data}")  # 추가
         raw = data["candidates"][0]["content"]["parts"][0]["text"]
+        print(f"Gemini 응답: {raw}") 
         raw = raw.replace("```json", "").replace("```", "").strip()
         return json.loads(raw)
     except Exception as e:
@@ -110,9 +133,41 @@ def parse():
 
     # 1차: 키워드 매칭
     result = keyword_parse(text)
+    print(f"키워드 파싱 결과: {result}")  # 추가
+
+    # 1.5차: 교수명 패턴 매칭
+    import re
+    prof_match = re.search(r'([가-힣]{2,4})\s*교수\s*(수업으로|빼줘|제외|포함|넣어)', text)
+    if prof_match:
+        prof_name = prof_match.group(1)
+        if '빼줘' in text or '제외' in text:
+            result['excluded_professors'] = result.get('excluded_professors', []) + [prof_name]
+        else:
+            result['preferred_professors'] = result.get('preferred_professors', []) + [prof_name]
+
+    # 과목명 패턴 매칭
+    course_keywords = ['넣어줘', '포함해줘', '무조건', '필수로', '넣어', '추가해줘']
+    if any(kw in text for kw in course_keywords):
+        # "운영체제 넣어줘", "운영체제 무조건 넣어" 등
+        course_match = re.search(r'(.+?)\s*(?:넣어줘|포함해줘|무조건 넣어|필수로 넣어|추가해줘)', text)
+        if course_match:
+            course_name = course_match.group(1).strip()
+            # 제외할 일반 단어들
+            exclude_words = ['수업', '과목', '강의', '전공', '교양', '학점']
+            if course_name not in exclude_words:
+                result['required_courses'] = result.get('required_courses', []) + [course_name]
+
+    # 학점 패턴 매칭
+    credit_match = re.search(r'(\d+)\s*학점', text)
+    if credit_match:
+        credit = int(credit_match.group(1))
+        if 6 <= credit <= 24:
+            result['target_credit'] = credit
+            result['max_credit'] = credit + 1
 
     # 2차: 모호한 표현은 Gemini API 호출
     gemini_result = gemini_parse(text)
+    print(f"Gemini 파싱 결과: {gemini_result}")  # 추가
 
     # 병합 (Gemini 결과로 업데이트)
     for k, v in gemini_result.items():
@@ -127,6 +182,7 @@ def parse():
     return jsonify({"constraints": result, "tags": tags})
 
 
+
 @app.route("/api/generate", methods=["POST"])
 def generate():
     """
@@ -136,6 +192,11 @@ def generate():
     """
     data = request.get_json()
     constraints = data.get("constraints", {})
+    # min_credit 자동 설정
+    constraints.setdefault("target_credit", 18)
+    constraints.setdefault("max_credit", 19)
+    constraints["min_credit"] = constraints["target_credit"] - 3
+    print(f"min_credit: {constraints['min_credit']}, target: {constraints['target_credit']}")
 
     if not constraints:
         return jsonify({"error": "\uc870\uac74\uc774 \ube44\uc5b4\uc788\uc2b5\ub2c8\ub2e4"}), 400

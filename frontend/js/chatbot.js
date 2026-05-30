@@ -15,13 +15,15 @@ let constraints = {
     grade: '',
     no_online: false,
     target_credit: 18,
-    max_credit: 19,
-    min_credit: 12
+    max_credit: 19
 };
 
 // 후보 시간표 목록
 let solutions = [];
 let currentIdx = 0;
+let onboardingStep = 0; 
+let creditChanged = false;  // 학점 직접 변경 여부
+
 
 // 로딩 메시지 목록
 const LOADING_STEPS = [
@@ -41,10 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveBtn = document.getElementById('saveBtn');
 
     // 전송 버튼
-    sendBtn.addEventListener('click', handleSend);
-    userInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') handleSend();
-    });
 
     // 시간표 생성 버튼
     generateBtn.addEventListener('click', handleGenerate);
@@ -69,6 +67,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 저장 목록 불러오기
     loadSavedList();
+
+    // 초기 대화 흐름 (여기에 추가)
+
+    function startOnboarding() {
+        addBotMessage('안녕하세요! 시간표 마법사예요 🪄\n\n먼저 학과를 알려주세요.\n예) 소프트웨어학과, 컴퓨터공학과');
+        onboardingStep = 1;
+    }
+
+    async function handleSendWithOnboarding() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (onboardingStep === 1) {
+            console.log('onboarding step 1 실행됨'); 
+            input.value = '';
+            addUserMessage(text);
+            constraints.user_dept = text;
+            renderTags();
+            addBotMessage(`${text}로 설정했어요!\n\n학년을 알려주세요. (1~4학년 또는 "상관없음")`);
+            onboardingStep = 2;
+            return;
+        }
+
+        if (onboardingStep === 2) {
+            input.value = '';
+            addUserMessage(text);
+            const gradeNum = text.replace('학년', '').trim();
+            if (['1','2','3','4'].includes(gradeNum)) {
+                constraints.grade = gradeNum;
+                renderTags();
+                addBotMessage(`${gradeNum}학년으로 설정했어요!\n\n목표 전공 학점을 알려주세요.\n예) 12학점, 15학점, 18학점\n(상관없으면 "상관없음" 입력)`);
+            } else {
+                addBotMessage(`학년 설정을 건너뛸게요.\n\n목표 전공 학점을 알려주세요.\n예) 12학점, 15학점, 18학점\n(상관없으면 "상관없음" 입력)`);
+            }
+            onboardingStep = 3;
+            return;
+        }
+
+        if (onboardingStep === 3) {
+            input.value = '';
+            addUserMessage(text);
+            const creditNum = parseInt(text.replace('학점', '').trim());
+            if (!isNaN(creditNum) && creditNum >= 6 && creditNum <= 24) {
+                constraints.target_credit = creditNum;
+                constraints.max_credit = creditNum + 1;
+                creditChanged = true;
+                renderTags();
+                addBotMessage(`${creditNum}학점으로 설정했어요!\n\n이제 원하는 조건을 자유롭게 말씀해 주세요.\n\n예시:\n💬 "금공강이고 아침은 싫어"\n💬 "운영체제 무조건 넣어줘"\n💬 "교양도 넣어줘"`);
+            } else {
+                addBotMessage(`기본 18학점으로 설정할게요!\n\n이제 원하는 조건을 자유롭게 말씀해 주세요.\n\n예시:\n💬 "금공강이고 아침은 싫어"\n💬 "운영체제 무조건 넣어줘"\n💬 "교양도 넣어줘"`);
+            }
+            onboardingStep = 4;
+            return;
+        }
+
+        if (onboardingStep < 4) return;
+        await handleSend();
+    }
+
+    // 기존 이벤트 교체
+    sendBtn.addEventListener('click', handleSendWithOnboarding);
+    userInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleSendWithOnboarding();
+    });
+
+    startOnboarding();
 });
 
 
@@ -169,6 +234,14 @@ function showSolution(idx) {
 // ── 조건 태그 관리 ────────────────────────────────────────
 
 function applyConstraints(newConstraints, tags) {
+    // 요일 한글 → 영어 변환
+    const dayKorToEng = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT'};
+    if (newConstraints.no_class_days) {
+        newConstraints.no_class_days = newConstraints.no_class_days.map(
+            d => dayKorToEng[d] || d
+        );
+    }
+
     // 배열 필드는 누적
     const arrayFields = ['required_courses', 'no_class_days', 'no_class_periods',
                          'preferred_professors', 'excluded_professors', 'lecture_types'];
@@ -182,6 +255,11 @@ function applyConstraints(newConstraints, tags) {
     // 단일 필드는 덮어쓰기
     const singleFields = ['user_dept', 'grade', 'no_online', 'target_credit', 'max_credit'];
     singleFields.forEach(field => {
+            if (newConstraints.target_credit !== undefined) {
+            creditChanged = true;
+        }
+
+
         if (newConstraints[field] !== undefined && newConstraints[field] !== '') {
             constraints[field] = newConstraints[field];
         }
@@ -242,7 +320,11 @@ function buildTagsFromConstraints() {
         tags.push({ label: constraints.user_dept, key: 'user_dept' });
     }
 
-    if (constraints.target_credit !== 18) {
+    if (constraints.grade) {
+        tags.push({ label: `${constraints.grade}학년`, key: 'grade' });
+    }
+
+    if (creditChanged) {
         tags.push({ label: `${constraints.target_credit}학점`, key: 'target_credit' });
     }
 
@@ -322,7 +404,10 @@ function loadSavedList() {
                 <div>${data.semester}</div>
                 <div class="saved-item-meta">${data.score}점 · ${data.credit}학점 · ${data.count}과목</div>
             </div>
-            <button class="load-btn" onclick="loadSaved('${key}')">불러오기</button>
+            <div style="display:flex; gap:6px;">
+                <button class="load-btn" onclick="loadSaved('${key}')">불러오기</button>
+                <button class="load-btn" style="color:#ef4444; border-color:#ef4444;" onclick="deleteSaved('${key}')">삭제</button>
+            </div>
         `;
         container.appendChild(item);
     });
@@ -346,6 +431,11 @@ function loadSaved(key) {
     addBotMessage(`📂 ${data.semester} 시간표를 불러왔어요.`);
 }
 
+function deleteSaved(key) {
+    localStorage.removeItem(key);
+    loadSavedList();
+    addBotMessage('🗑️ 시간표가 삭제됐어요.');
+}
 
 // ── UI 헬퍼 ──────────────────────────────────────────────
 
