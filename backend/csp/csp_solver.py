@@ -296,6 +296,23 @@ def find_conflicts(constraints, filtered_courses):
 def generate_timetables(constraints, json_path="dku_courses_csp.json",
                          max_results=100, timeout=3.0):
     start = time.time()
+    # 필수 교양 과목이 있으면 max_credit 자동 증가
+    required_liberal_credit = 0
+    all_courses_check = load_courses(json_path)
+    for req in constraints.get("required_courses", []):
+        for c in all_courses_check:
+            if req in c.get("name", ""):
+                t = c.get("type", "")
+                major_types_check = ["전공필수", "전공선택", "SW선택", "전공기초",
+                                     "POSE-AI(English)", "POSE-AI(AI)", "POSE-AI(Open Source)"]
+                if t not in major_types_check:
+                    required_liberal_credit += c.get("credit", 0)
+                    break
+
+    if required_liberal_credit > 0:
+        constraints["max_credit"] = constraints.get("max_credit", 19) + required_liberal_credit
+        constraints["target_credit"] = constraints.get("target_credit", 18) + required_liberal_credit
+
     all_courses = load_courses(json_path)
     filtered = pre_filter(all_courses, constraints)
     conflicts = find_conflicts(constraints, filtered)
