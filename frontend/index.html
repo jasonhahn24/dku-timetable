@@ -51,6 +51,19 @@
 
             <!-- tui-calendar -->
             <div id="calendar"></div>
+                    <div id="chartArea" style="display:none; padding:16px; background:white; border:1px solid #e5e7eb; border-radius:12px; margin-top:12px;">
+            <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <canvas id="dayChart"></canvas>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <canvas id="breakdownChart"></canvas>
+                </div>
+            </div>
+        </div>
 
             <!-- 충돌 리포트 -->
             <div id="conflictReport" class="conflict-report" style="display:none;">
@@ -74,5 +87,7 @@
 
     <script src="./js/timetable.js"></script>
     <script src="./js/chatbot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/chart_viz.js"></script>
 </body>
 </html>
