@@ -192,8 +192,10 @@ async function handleGenerate() {
 
         if (data.conflicts && data.conflicts.length > 0) {
             showConflict(data.conflicts);
-            addBotMessage(`⚠️ 조건 충돌이 발생했어요.\n${data.conflicts.map(c => c.desc).join('\n')}`);
-            return;
+        const conflictMsg = data.conflicts.map(c => 
+            `• ${c.desc}\n  💡 ${c.fix}`
+        ).join('\n\n');
+        addBotMessage(`⚠️ 조건 충돌이 발생했어요. (${data.elapsed_ms}ms)\n\n${conflictMsg}\n\n조건 태그의 × 버튼으로 충돌하는 조건을 제거하거나 조건을 완화해보세요!`);            return;
         }
 
         if (!data.solutions || data.solutions.length === 0) {
