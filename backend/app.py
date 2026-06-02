@@ -220,17 +220,13 @@ def generate():
     constraints.setdefault("no_class_days", [])
     constraints.setdefault("no_class_periods", [])
 
-    try:
-        result = generate_timetables(
-            constraints=constraints,
-            json_path=COURSES_JSON,
-            max_results=100,
-            timeout=3.0
-        )
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    result = generate_timetables(
+        constraints=constraints,
+        json_path=COURSES_JSON,
+        max_results=100,
+        timeout=3.0
+    )
+    return jsonify(result)
 
 @app.route("/api/health", methods=["GET"])
 def health():

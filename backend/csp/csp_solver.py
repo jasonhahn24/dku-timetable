@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import json, re, time
+import os
+
 
 DAY_MAP = {"\uc6d4":"MON","\ud654":"TUE","\uc218":"WED","\ubaa9":"THU","\uae08":"FRI","\ud1a0":"SAT"}
 
@@ -234,60 +236,50 @@ def find_conflicts(constraints, filtered_courses):
     no_days = constraints.get("no_class_days", [])
     no_periods = constraints.get("no_class_periods", [])
 
+    json_path = os.path.join(os.path.dirname(__file__), "dku_courses_csp.json")
+    all_courses = load_courses(json_path)
+
     for req in required:
-        # 필터링 후 과목이 아예 없는 경우
         matching = [c for c in filtered_courses if req in c["name"]]
-        if not matching:
-            # 공강 조건 없이 찾으면 몇 개 있는지 확인
-            constraints_relaxed = {k: v for k, v in constraints.items()}
-            constraints_relaxed["no_class_days"] = []
-            constraints_relaxed["no_class_periods"] = []
-            all_courses = filtered_courses  # 이미 로드된 courses 활용
+        all_matching = [c for c in all_courses if req in c["name"]]
 
-            # 공강 조건 때문인지 확인
-            if no_days:
-                day_conflict = []
-                for c in all_courses:
-                    if req not in c["name"]:
-                        continue
-                    for slot in c.get("slots", []):
-                        if slot["day"] in no_days:
-                            day_conflict.append(c)
-                            break
-
-                if day_conflict:
-                    conflicts.append({
-                        "type": "\uacf5\uac15 \ucda9\ub3cc",
-                        "desc": f"{req} \uacfc\ubaa9\uc774 \uc120\ud0dd\ud55c \uacf5\uac15 \uc694\uc77c\uacfc \ucda9\ub3cc\ud569\ub2c8\ub2e4",
-                        "fix": f"\uacf5\uac15 \uc870\uac74\uc744 \ud574\uc81c\ud558\uba74 {req}\uc744 \ud3ec\ud568\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4"
-                    })
-                    continue
-
-            # 교시 조건 때문인지 확인
-            if no_periods:
-                period_conflict = []
-                for c in all_courses:
-                    if req not in c["name"]:
-                        continue
-                    for slot in c.get("slots", []):
-                        for p in slot.get("periods", []):
-                            if p in no_periods:
-                                period_conflict.append(c)
-                                break
-
-                if period_conflict:
-                    conflicts.append({
-                        "type": "\uad50\uc2dc \ucda9\ub3cc",
-                        "desc": f"{req} \uacfc\ubaa9\uc774 \uc81c\uc678 \uad50\uc2dc\uc640 \ucda9\ub3cc\ud569\ub2c8\ub2e4",
-                        "fix": f"\uad50\uc2dc \uc81c\uc678 \uc870\uac74\uc744 \ud574\uc81c\ud558\uba74 {req}\uc744 \ud3ec\ud568\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4"
-                    })
-                    continue
-
-            # 그 외 이유
+        if not all_matching:
             conflicts.append({
-                "type": "\ucda9\ub3cc",
-                "desc": f"{req} \uacfc\ubaa9\uc744 \uc870\uac74\uc5d0 \ub9de\ub294 \ubd84\ubc18\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
-                "fix": f"\uc870\uac74\uc744 \uc644\ud654\ud558\uba74 {req}\uc744 \ud3ec\ud568\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4"
+                "type": "과목 없음",
+                "desc": f"{req} 과목을 강의 데이터에서 찾을 수 없습니다.",
+                "fix": "과목명을 정확히 입력했는지 확인해주세요."
+            })
+            continue
+
+        # matching이 없거나, 있어도 전부 공강 요일인 경우 체크
+        matching_not_in_no_days = [
+            c for c in matching
+            if not all(slot["day"] in no_days for slot in c.get("slots", []))
+        ]
+
+        if not matching_not_in_no_days:
+            all_in_no_days = (
+                bool(no_days) and
+                all(
+                    all(slot["day"] in no_days for slot in c.get("slots", []))
+                    for c in matching if c.get("slots")
+                )
+            )
+
+            if all_in_no_days:
+                day_names = {"MON": "월", "TUE": "화", "WED": "수", "THU": "목", "FRI": "금"}
+                days_str = ", ".join([day_names.get(d, d) for d in no_days])
+                conflicts.append({
+                    "type": "공강 충돌",
+                    "desc": f"{req} 과목의 모든 분반이 공강 요일({days_str}요일)에만 개설되어 있습니다.",
+                    "fix": f"공강 조건에서 해당 요일을 제거하거나 {req} 필수 조건을 해제해보세요."
+                })
+                continue
+
+            conflicts.append({
+                "type": "충돌",
+                "desc": f"{req} 과목을 조건에 맞는 분반을 찾을 수 없습니다.",
+                "fix": f"조건을 완화하면 {req}을 포함할 수 있습니다."
             })
 
     return conflicts
