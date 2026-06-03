@@ -129,7 +129,7 @@ dku-timetable/
 │   ├── app.py              # Flask API 서버
 │   ├── .env                # Gemini API 키 (gitignore)
 │   ├── csp/
-│   │   └── csp_solver.py   # CSP 엔진 (백트래킹 + MRV)
+│   │   └── csp_solver.py   # CSP 엔진 (백트래킹 + MRV + AC-3 구현)
 │   └── crawler/
 │       ├── dku_crawler.py  # 단국대 포털 크롤러
 │       └── dku_courses_csp.json  # 강의 데이터 7,821개
