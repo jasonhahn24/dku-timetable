@@ -92,8 +92,6 @@ tui-calendar 시각화
 
 ## 🚀 시작하기
 
-> 개발 진행 중입니다. 설치 방법은 추후 업데이트 예정입니다.
-
 ```bash
 # 저장소 클론
 git clone https://github.com/본인아이디/dku-timetable.git
