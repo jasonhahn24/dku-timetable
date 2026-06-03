@@ -94,18 +94,21 @@ tui-calendar 시각화
 
 ```bash
 # 저장소 클론
-git clone https://github.com/본인아이디/dku-timetable.git
+git clone https://github.com/jasonhahn24/dku-timetable.git
 cd dku-timetable
 
-# 프론트엔드
-cd frontend
-npm install
-npm start
+# 패키지 설치
+pip install flask flask-cors requests python-dotenv
 
-# 백엔드
+# API 키 설정 (backend/.env 파일 생성)
+GEMINI_API_KEY=발급받은_키
+
+# 서버 실행
 cd backend
-pip install -r requirements.txt
 python app.py
+
+# 프론트엔드 실행
+frontend/index.html 브라우저로 열기
 ```
 
 ---
@@ -114,22 +117,23 @@ python app.py
 
 ```
 dku-timetable/
-├── frontend/           # HTML, CSS, JavaScript
+├── frontend/
 │   ├── index.html
 │   ├── css/
+│   │   └── style.css
 │   └── js/
-│       ├── chatbot.js  # 챗봇 UI + Gemini API
-│       ├── timetable.js# tui-calendar 연동
-│       └── chart.js    # Chart.js 시각화
-├── backend/            # Python Flask
-│   ├── app.py          # Flask API 서버
+│       ├── chatbot.js      # 챗봇 UI + Flask API 연동
+│       ├── timetable.js    # tui-calendar 연동
+│       └── chart_viz.js    # Chart.js 시각화
+├── backend/
+│   ├── app.py              # Flask API 서버
+│   ├── .env                # Gemini API 키 (gitignore)
 │   ├── csp/
-│   │   ├── solver.py   # CSP 알고리즘
-│   │   ├── ac3.py      # AC-3 알고리즘
-│   │   └── mrv.py      # MRV 휴리스틱
+│   │   └── csp_solver.py   # CSP 엔진 (백트래킹 + MRV)
 │   └── crawler/
-│       └── dku_crawler.py  # 단국대 포털 크롤러
-└── docs/               # 제안서 및 문서
+│       ├── dku_crawler.py  # 단국대 포털 크롤러
+│       └── dku_courses_csp.json  # 강의 데이터 7,821개
+└── docs/
 ```
 
 ## 🚀 기술적 차별점
